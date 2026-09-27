@@ -5,11 +5,7 @@ A small always-on-top Windows widget that shows your **Claude subscription usage
 numbers `/usage` shows in Claude Code, without typing `/usage`. It also adds a global
 **F9** hotkey that shows or hides your Claude Code terminal.
 
-![The widget](docs/widget.png)
-
-*The widget after a restart while the usage server is rate-limiting it. It shows the
-last saved numbers and marks them "17:54 · limited" in amber. The reset countdowns
-stay live.*
+<img src="docs/widget.png" alt="The widget: session and weekly limits as bars, with reset times" width="380">
 
 One PowerShell file, no install, no dependencies beyond what ships with Windows.
 
