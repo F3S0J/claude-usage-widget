@@ -2,12 +2,15 @@
 
 A small always-on-top Windows widget that shows your **Claude subscription usage**: the
 5-hour session, the weekly limit, and any per-model weekly limit. These are the same
-numbers `/usage` shows in Claude Code, without typing `/usage`. It also adds a global
-**F9** hotkey that shows or hides your Claude Code terminal.
+numbers `/usage` shows in Claude Code, without typing `/usage`. Below the bars it shows
+a **daily budget** for the weekly limit and **token statistics** read from your local
+Claude Code transcripts. It also adds a global **F9** hotkey that shows or hides your
+Claude Code terminal.
 
-<img src="docs/widget.png" alt="The widget: session and weekly limits as bars, with reset times" width="380">
+<img src="docs/widget.png" alt="The widget: limit bars with a daily budget, then tokens today, API value, burn rate, split by model, subagent share and a 7-day chart" width="328">
 
-One PowerShell file, no install, no dependencies beyond what ships with Windows.
+One PowerShell file plus one C# file it compiles at start. No install, no dependencies
+beyond what ships with Windows.
 
 ## What it does
 
@@ -24,6 +27,23 @@ One PowerShell file, no install, no dependencies beyond what ships with Windows.
   `Retry-After`, otherwise doubling up to 15 min), and returns to normal after the
   next success. "offline" only appears for real errors.
 - Drag it anywhere; it remembers the spot. Right-click → Refresh / Exit.
+- **Daily budget.** Each weekly row says how much of the week you can still spend
+  today, e.g. `today: 7% left of 14% daily budget`, and a tick on the bar marks where
+  the bar should be by midnight. The budget is what was free when the day began, spread
+  evenly over the time until the reset, so an unused share rolls into the next days.
+- **Pace forecasts.** "on pace for 56% by the reset" for the week; for the 5-hour
+  session, when it will be full at the current pace.
+- **Token statistics** (from the transcripts on this PC, refreshed every 15 seconds,
+  no extra server requests):
+  - tokens today (input, output, cache read and written, number of replies)
+  - API value: what the same usage would cost at API list prices
+  - burn rate over the last hour
+  - tokens per 1 % of the weekly limit
+  - split by model, share used by subagents, top sessions of the day
+  - a bar chart of the last 7 days
+- **Preferences.** Right-click → Preferences… switches every block on or off.
+- **Look.** Right-click → Theme (Dark, Light, Midnight, Terminal), Transparency, Size.
+  Ctrl + mouse wheel resizes in 10 % steps. Choices are saved in `settings.json`.
 
 ## Requirements
 
@@ -70,6 +90,14 @@ At the top of `widget.ps1`:
 - **The endpoint is rate-limited.** Restarting the widget over and over or spamming
   double-click will get you a 429 for a while. The widget copes, but don't poll faster
   than the default.
+- **Token statistics are local and approximate.** `TokenScan.cs` reads
+  `%USERPROFILE%\.claude\projects\**\*.jsonl` on a background thread and only reads what
+  was appended since the last scan. Usage on claude.ai or on another machine is not in
+  those files, so "tokens per 1 %" is an estimate. Dollar figures use the list prices
+  hard-coded in `Price()` in `TokenScan.cs`, with cache writes at 1.25× (5-minute) and 2×
+  (1-hour) the input price. Update them when prices change. Nothing is billed.
+- **The daily budget needs one day to settle.** On the first run it cannot know what was
+  used before it started, so the first day's figure counts from that moment.
 - **F9 is a global hotkey.** While the widget runs, F9 no longer reaches other apps
   (e.g. recalculation in Excel). Change `$HotKeyVk` if you need F9.
 - If you start the widget from *inside* a Claude Code session, it removes the
