@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Usage Widget – Claude Code usage monitor for Windows (limits, tokens, cost)</title>
+<meta name="description" content="Free always-on-top Windows widget that shows your Claude Code usage: 5-hour session limit, weekly limit, a daily budget, tokens used today, API cost equivalent and burn rate. No more typing /usage. Open source, one PowerShell script.">
+<meta name="keywords" content="Claude Code usage monitor, Claude usage tracker, Claude Code rate limit, Claude weekly limit, Claude 5-hour session limit, Claude Max usage, Claude Pro usage, Claude Code token usage, Claude Code cost, Claude usage widget Windows, /usage command">
+<link rel="canonical" href="https://f3s0j.github.io/claude-usage-widget/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#1f1e1d">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Claude Usage Widget – see your Claude Code limits without typing /usage">
+<meta property="og:description" content="Always-on-top Windows widget: session and weekly limits, a daily budget, tokens today, API cost equivalent and burn rate. Free and open source.">
+<meta property="og:url" content="https://f3s0j.github.io/claude-usage-widget/">
+<meta property="og:image" content="https://f3s0j.github.io/claude-usage-widget/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://f3s0j.github.io/claude-usage-widget/og.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "Claude Usage Widget",
+      "alternateName": "claude-usage-widget",
+      "description": "Always-on-top Windows desktop widget that shows Claude Code subscription usage: 5-hour session limit, weekly limit, daily budget, token usage, API cost equivalent and burn rate.",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Windows 10, Windows 11",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "license": "https://opensource.org/licenses/MIT",
+      "url": "https://f3s0j.github.io/claude-usage-widget/",
+      "downloadUrl": "https://github.com/F3S0J/claude-usage-widget/archive/refs/heads/main.zip",
+      "codeRepository": "https://github.com/F3S0J/claude-usage-widget",
+      "screenshot": "https://f3s0j.github.io/claude-usage-widget/og.png",
+      "author": { "@type": "Person", "name": "Josef Tot", "url": "https://www.joseftot.com" }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "How do I check my Claude Code usage limit without typing /usage?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Run the Claude Usage Widget. It asks the same server endpoint that /usage uses every two minutes and keeps the 5-hour session limit and the weekly limits on screen as bars with their reset times." } },
+        { "@type": "Question", "name": "Which Claude plans does it work with?",
+          "acceptedAnswer": { "@type": "Answer", "text": "It needs Claude Code logged in with a Claude subscription (Pro or Max). It shows whichever limits your plan returns, including per-model weekly limits." } },
+        { "@type": "Question", "name": "Is my Claude login token safe?",
+          "acceptedAnswer": { "@type": "Answer", "text": "The widget reads the token Claude Code already stores on your PC and sends it only to api.anthropic.com, in the same request Claude Code makes. It never refreshes or stores the token. The code is one PowerShell file and one C# file you can read." } },
+        { "@type": "Question", "name": "How is the dollar value calculated?",
+          "acceptedAnswer": { "@type": "Answer", "text": "It multiplies the tokens found in your local Claude Code transcripts by the API list prices per model, including cache reads and cache writes. It is a comparison with pay-as-you-go API pricing, not a bill." } },
+        { "@type": "Question", "name": "Does it work on macOS or Linux?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No. It is built on Windows PowerShell and WPF and runs on Windows 10 and 11 only." } },
+        { "@type": "Question", "name": "Why does the widget say limited or offline?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Limited means the usage server answered 429 Too Many Requests; the widget shows the last saved numbers and retries later. Offline means a real error, most often an expired token, which fixes itself the next time you open Claude Code." } }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--page:#141312;--card:#1d1c1a;--line:#33312e;--text:#f3efe8;--muted:#a8a29a;--accent:#d97757;--accent2:#f0a583;--good:#7bd88f}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--page);color:var(--text);font:16px/1.6 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+a{color:var(--accent2)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+header.top{display:flex;align-items:center;justify-content:space-between;padding:18px 0}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--text);text-decoration:none}
+.brand svg{width:26px;height:26px}
+nav a{color:var(--muted);text-decoration:none;margin-left:20px;font-size:14px}
+nav a:hover{color:var(--text)}
+.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center;padding:40px 0 72px}
+h1{font-size:clamp(32px,5vw,52px);line-height:1.1;margin:0 0 18px;letter-spacing:-.02em}
+h1 em{font-style:normal;color:var(--accent)}
+.lead{font-size:19px;color:var(--muted);margin:0 0 26px;max-width:34em}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:18px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:10px;font-weight:600;text-decoration:none;border:1px solid var(--line);color:var(--text)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#1a1210}
+.btn:hover{filter:brightness(1.1)}
+.small{font-size:13px;color:var(--muted)}
+h2{font-size:clamp(24px,3.4vw,34px);line-height:1.2;margin:0 0 10px;letter-spacing:-.01em}
+section{padding:56px 0;border-top:1px solid var(--line)}
+.sub{color:var(--muted);margin:0 0 30px;max-width:44em}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+.card svg{width:28px;height:28px;color:var(--accent);margin-bottom:10px}
+.card h3{margin:0 0 6px;font-size:17px}
+.card p{margin:0;color:var(--muted);font-size:15px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+.budget{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px}
+.budget .bar{position:relative;height:14px;border-radius:7px;background:#3a3835;margin:34px 0 40px}
+.budget .fill{position:absolute;left:0;top:0;bottom:0;width:37%;border-radius:7px;background:var(--accent)}
+.budget .slice{position:absolute;left:28%;width:15%;top:-6px;bottom:-6px;border:1px dashed var(--good);border-radius:4px}
+.budget .tick{position:absolute;left:43%;top:-8px;bottom:-8px;width:3px;background:#fff;border-radius:2px}
+.budget .lab{position:absolute;font-size:12px;color:var(--muted);white-space:nowrap}
+.budget .l1{left:28%;top:-30px;color:var(--good)}
+.budget .l2{left:43%;top:26px;transform:translateX(-50%)}
+.budget .l3{left:0;top:26px}
+pre{background:#0d0c0b;border:1px solid var(--line);border-radius:12px;padding:18px;overflow:auto;font:14px/1.55 Consolas,"Cascadia Code",monospace;color:#e9e3d9;margin:0 0 16px}
+.keys{display:flex;gap:10px;align-items:center;margin:14px 0}
+kbd{display:inline-block;min-width:44px;text-align:center;padding:8px 12px;border-radius:8px;background:#2a2826;border:1px solid #47443f;border-bottom-width:3px;font:600 15px "Segoe UI",sans-serif}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-bottom:10px}
+summary{cursor:pointer;font-weight:600}
+details p{color:var(--muted);margin:10px 0 2px}
+footer{padding:36px 0 56px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
+ul.check{list-style:none;padding:0;margin:0}
+ul.check li{padding-left:26px;position:relative;margin:8px 0;color:var(--muted)}
+ul.check li::before{content:"";position:absolute;left:2px;top:9px;width:12px;height:6px;border-left:2px solid var(--good);border-bottom:2px solid var(--good);transform:rotate(-45deg)}
+ul.check b{color:var(--text);font-weight:600}
+
+/* widget mock */
+.stage{display:flex;flex-direction:column;align-items:center;gap:14px}
+.w{--bg:#1f1e1d;--bd:rgba(255,255,255,.27);--ac:#d97757;--tx:#fff;--lb:rgba(255,255,255,.87);--sb:rgba(255,255,255,.53);--tr:rgba(255,255,255,.2);--tk:#fff;--gd:#7bd88f;
+  width:290px;background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:11px 14px 13px;font:13.5px/1.35 "Segoe UI",system-ui,sans-serif;color:var(--tx);box-shadow:0 24px 60px rgba(0,0,0,.5);text-align:left}
+.w[data-theme=light]{--bg:#faf9f5;--bd:rgba(0,0,0,.2);--ac:#c15f3c;--tx:#1f1e1d;--lb:rgba(31,30,29,.87);--sb:rgba(31,30,29,.6);--tr:rgba(0,0,0,.13);--tk:#1f1e1d;--gd:#2e8b57}
+.w[data-theme=midnight]{--bg:#0f172a;--bd:rgba(165,180,252,.27);--ac:#7aa2f7;--tx:#e6edf7;--lb:rgba(230,237,247,.87);--sb:rgba(230,237,247,.53)}
+.w[data-theme=terminal]{--bg:#000;--bd:rgba(51,255,102,.33);--ac:#33ff66;--tx:#d7ffd9;--lb:rgba(215,255,217,.87);--sb:rgba(51,255,102,.53);--tr:rgba(51,255,102,.2);--gd:#33ff66}
+.w .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.w .hd b{color:var(--ac);font-weight:600}
+.w .hd span,.w .s{color:var(--sb);font-size:11.5px}
+.w .r{display:flex;justify-content:space-between;margin-top:8px;color:var(--lb)}
+.w .r b{color:var(--tx);font-weight:600}
+.w .b{position:relative;height:7px;background:var(--tr);margin:3px 0 3px}
+.w .b i{position:absolute;left:0;top:0;bottom:0;background:var(--ac)}
+.w .b u{position:absolute;top:0;bottom:0;width:2px;background:var(--tk)}
+.w .g{color:var(--gd);font-size:11.5px}
+.w .p{display:flex;justify-content:space-between;font-size:11.5px;color:var(--sb)}
+.w .p span:last-child{color:var(--lb)}
+.w .ch{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;align-items:end;height:36px;margin-top:6px}
+.w .ch i{background:var(--sb);border-radius:1px}
+.w .ch i:last-child{background:var(--ac)}
+.w .dy{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;text-align:center;font-size:10px;color:var(--sb)}
+.themes{display:flex;gap:8px}
+.themes button{font:13px "Segoe UI",sans-serif;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer}
+.themes button[aria-pressed=true]{border-color:var(--accent);color:var(--text)}
+
+/* screenshot modes (?shot=og / ?shot=themes), used to render the social images */
+.shot{position:fixed;inset:0;z-index:9;background:radial-gradient(1200px 600px at 20% 0,#3a2219,#141312 60%);display:flex;align-items:center;justify-content:center;gap:28px;padding:40px}
+.shot .txt{max-width:560px}
+.shot .txt h1{font-size:60px}
+.shot .txt p{font-size:26px;color:var(--muted);margin:0}
+.shot .w{flex:none}
+
+.hero>*,.two>*,section{min-width:0}
+@media(max-width:820px){.hero,.two{grid-template-columns:1fr}.hero{padding-top:16px}nav a:not(.gh){display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <a class="brand" href="#top" aria-label="Claude Usage Widget">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#1f1e1d" stroke="#57534e"/><rect x="6" y="9" width="20" height="4" rx="2" fill="#57534e"/><rect x="6" y="9" width="13" height="4" rx="2" fill="#d97757"/><rect x="6" y="19" width="20" height="4" rx="2" fill="#57534e"/><rect x="6" y="19" width="7" height="4" rx="2" fill="#d97757"/><rect x="15" y="17" width="2" height="8" fill="#fff"/></svg>
+    Claude Usage Widget
+  </a>
+  <nav><a href="#features">Features</a><a href="#budget">Daily budget</a><a href="#install">Install</a><a href="#faq">FAQ</a><a class="gh" href="https://github.com/F3S0J/claude-usage-widget">GitHub</a></nav>
+</header>
+
+<main id="top">
+<div class="hero">
+  <div>
+    <h1>See your Claude Code limits <em>without typing /usage</em></h1>
+    <p class="lead">A small always-on-top Windows widget that keeps your Claude usage on screen: the 5-hour session limit, the weekly limit, how much you can still spend today, and how many tokens you have burned.</p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/F3S0J/claude-usage-widget/archive/refs/heads/main.zip">Download ZIP</a>
+      <a class="btn" href="https://github.com/F3S0J/claude-usage-widget">View on GitHub</a>
+    </div>
+    <p class="small">Free and open source (MIT) · Windows 10 and 11 · works with Claude Pro and Max · not affiliated with Anthropic</p>
+  </div>
+  <div class="stage">
+    <div class="w" id="mock" data-theme="dark" role="img" aria-label="Screenshot of the Claude Usage Widget: session limit 42%, weekly limit 37% with a daily budget, tokens today, API value, burn rate, split by model, top sessions and a 7-day chart">
+      <div class="hd"><b>Claude usage</b><span>14:32</span></div>
+      <div class="r"><span>Session (5h)</span><b>42%</b></div>
+      <div class="b"><i style="width:42%"></i></div>
+      <div class="s">resets 17:10 (2h 38m)</div>
+      <div class="s">at this pace about 78% used at the reset</div>
+      <div class="r"><span>Week - all models</span><b>37%</b></div>
+      <div class="b"><i style="width:37%"></i><u style="left:43%"></u></div>
+      <div class="s">resets Thu 9 Oct 22:00 (4d 7h)</div>
+      <div class="g">today: 6% left of 15% daily budget</div>
+      <div class="s">on pace for 96% by the reset</div>
+      <div class="r"><span>Tokens today</span><b>1.4M</b></div>
+      <div class="s">in 3k · out 1.4M · 1120 replies</div>
+      <div class="s">cache: read 212.0M · written 9.4M</div>
+      <div class="r"><span>API value today</span><b>$128</b></div>
+      <div class="s">at API prices · since weekly reset $512</div>
+      <div class="r"><span>Burn rate (last hour)</span><b>310k/h</b></div>
+      <div class="s">$27.40 per hour at API prices</div>
+      <div class="r"><span>By model today</span></div>
+      <div class="p"><span>opus-5-5</span><span>1.2M · $119</span></div>
+      <div class="p"><span>sonnet-5-5</span><span>210k · $9.20</span></div>
+      <div class="r"><span>Top sessions today</span></div>
+      <div class="p"><span>Refactor billing module</span><span>$71.40</span></div>
+      <div class="p"><span>Write API tests</span><span>$38.10</span></div>
+      <div class="p"><span>Fix login redirect bug</span><span>$12.75</span></div>
+      <div class="r"><span>Last 7 days</span><b>$1240</b></div>
+      <div class="ch"><i style="height:70%"></i><i style="height:35%"></i><i style="height:100%"></i><i style="height:55%"></i><i style="height:82%"></i><i style="height:64%"></i><i style="height:48%"></i></div>
+      <div class="dy"><span>Sa</span><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span></div>
+    </div>
+    <div class="themes" role="group" aria-label="Widget theme">
+      <button data-t="dark" aria-pressed="true">Dark</button><button data-t="light" aria-pressed="false">Light</button><button data-t="midnight" aria-pressed="false">Midnight</button><button data-t="terminal" aria-pressed="false">Terminal</button>
+    </div>
+    <p class="small">Example numbers. Click a theme to try it.</p>
+  </div>
+</div>
+
+<section id="features">
+  <h2>A Claude Code usage monitor that stays on screen</h2>
+  <p class="sub">Claude Code tells you your usage when you type <code>/usage</code>. That interrupts the agent, and you only find out you hit the rate limit when it stops working. The widget shows the same numbers all the time, and adds the ones <code>/usage</code> does not have.</p>
+  <div class="grid">
+    <div class="card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7h18M3 7v4h12V7M3 15h18M3 15v4h7v-4"/></svg><h3>Session and weekly limit bars</h3><p>The 5-hour session limit, the weekly limit and any per-model weekly limit, each with the time until it resets. Amber at 60 %, red at 85 %.</p></div>
+    <div class="card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 15h3"/></svg><h3>Daily budget</h3><p>How much of the weekly limit you can spend today so that you neither run out early nor leave it unused.</p></div>
+    <div class="card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg><h3>Pace forecast</h3><p>"On pace for 96 % by the reset" for the week, and the time your current session will be full if you keep going at this speed.</p></div>
+    <div class="card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><h3>Token usage today</h3><p>Input, output and cache tokens, the number of replies and the burn rate over the last hour, read from your local Claude Code transcripts.</p></div>
+    <div class="card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M16.5 7.5c-.8-1.2-2.4-2-4.5-2-2.8 0-4.5 1.3-4.5 3.2 0 4.300 9.500 2.100 9.500 6.600 0 1.900-1.900 3.200-5 3.200-2.300 0-4.100-.9-5-2.300"/></svg><h3>What it would cost on the API</h3><p>Your usage priced at API list rates, per day, per model and per session. Shows what the subscription is worth to you.</p></div>
+    <div class="card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><h3>Models, subagents, 7 days</h3><p>The split by model, the share burned by subagents, the most expensive sessions of the day and a chart of the last week.</p></div>
+    <div class="card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h1M10 10h1M14 10h1M18 10h0M7 14h10"/></svg><h3>F9 terminal hotkey</h3><p>One key brings the Claude Code terminal to the front or puts it away. Shift+F9 opens another session as a tab.</p></div>
+    <div class="card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg><h3>Yours to arrange</h3><p>Switch every block on or off. Four themes, adjustable transparency, any size. Drag it anywhere; it remembers.</p></div>
+  </div>
+</section>
+
+<section id="budget">
+  <div class="two">
+    <div>
+      <h2>Use the whole weekly limit, without running out</h2>
+      <p class="sub">A weekly limit that resets with 40 % unused is wasted. One that is gone by day five stops your work. The daily budget splits what is left evenly over the days until the reset.</p>
+      <ul class="check">
+        <li><b>The dashed slice</b> is today's share of the week.</li>
+        <li><b>The white tick</b> is where the bar should be by midnight.</li>
+        <li><b>Unused budget rolls over</b> into the following days automatically.</li>
+        <li>The line turns amber when you spend past today's share.</li>
+      </ul>
+    </div>
+    <div class="budget" role="img" aria-label="Diagram: a weekly usage bar at 37 percent, today's 15 percent slice starting at 28 percent, and a tick at 43 percent marking the target for midnight">
+      <strong>Week - all models</strong> <span class="small">37 % used</span>
+      <div class="bar"><div class="fill"></div><div class="slice"></div><div class="tick"></div>
+        <span class="lab l1">today's budget: 15 %</span><span class="lab l2">target by midnight</span><span class="lab l3">start of the week</span></div>
+      <span style="color:var(--good)">today: 6% left of 15% daily budget</span>
+    </div>
+  </div>
+</section>
+
+<section id="hotkey">
+  <div class="two">
+    <div>
+      <h2>F9: the Claude terminal as a drop-down</h2>
+      <p class="sub">With many windows open, the Claude Code terminal is the one you keep hunting for. The widget registers a global hotkey for it.</p>
+      <div class="keys"><kbd>F9</kbd><span>show the Claude terminal, or minimize it if it is in front</span></div>
+      <div class="keys"><kbd>Shift</kbd><kbd>F9</kbd><span>open another Claude session as a new tab</span></div>
+      <p class="small">The key can be changed at the top of the script.</p>
+    </div>
+    <div>
+      <h2>Private by design</h2>
+      <ul class="check">
+        <li><b>Reads the login Claude Code already has</b> and never refreshes or stores it.</li>
+        <li><b>One request, to api.anthropic.com</b>, the same one <code>/usage</code> makes.</li>
+        <li><b>Token statistics stay local</b>: they are counted from the transcripts on your PC.</li>
+        <li><b>Two readable source files</b>, no installer, no background service, no telemetry.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <h2>Install in one minute</h2>
+  <p class="sub">You need Windows 10 or 11, Claude Code logged in with a Claude subscription, and Windows Terminal for the F9 hotkey. PowerShell 5.1 is already part of Windows.</p>
+<pre>git clone https://github.com/F3S0J/claude-usage-widget.git
+cd claude-usage-widget
+powershell -ExecutionPolicy Bypass -File .\install-shortcuts.ps1</pre>
+  <p class="sub">This puts a <strong>Claude Usage</strong> shortcut on the Desktop and in the Startup folder, so the widget starts with Windows. No git? <a href="https://github.com/F3S0J/claude-usage-widget/archive/refs/heads/main.zip">Download the ZIP</a>, unpack it and run the same last line in that folder.</p>
+</section>
+
+<section id="faq">
+  <h2>Questions</h2>
+
+  <details open><summary>How do I check my Claude Code usage limit without typing /usage?</summary><p>Run the widget. Every two minutes it asks the same server endpoint that <code>/usage</code> uses, and keeps the 5-hour session limit and the weekly limits on screen as bars with their reset times.</p></details>
+  <details><summary>Which Claude plans does it work with?</summary><p>It needs Claude Code logged in with a Claude subscription (Pro or Max). It shows whichever limits your plan returns, including per-model weekly limits.</p></details>
+  <details><summary>Is my Claude login token safe?</summary><p>The widget reads the token Claude Code already stores on your PC and sends it only to api.anthropic.com, in the same request Claude Code makes. It never refreshes or stores the token. The code is one PowerShell file and one C# file you can read.</p></details>
+  <details><summary>How is the dollar value calculated?</summary><p>It multiplies the tokens found in your local Claude Code transcripts by the API list prices per model, including cache reads and cache writes. It is a comparison with pay-as-you-go API pricing, not a bill. The prices are written in the code and need updating when they change.</p></details>
+  <details><summary>Do the token statistics include claude.ai chats?</summary><p>No. The limit bars come from the server and cover everything on your account. The token counts, cost and charts come from the Claude Code transcripts on this PC only.</p></details>
+  <details><summary>Does it work on macOS or Linux?</summary><p>No. It is built on Windows PowerShell and WPF and runs on Windows 10 and 11 only.</p></details>
+  <details><summary>Why does the widget say "limited" or "offline"?</summary><p>"Limited" means the usage server answered 429 Too Many Requests; the widget shows the last saved numbers and retries later. "Offline" means a real error, most often an expired token, which fixes itself the next time you open Claude Code.</p></details>
+  <details><summary>Is this an official Anthropic tool?</summary><p>No. It is an independent open-source project. The usage endpoint it reads is the one the official client uses, but it is not a documented public API and can change without notice.</p></details>
+</section>
+</main>
+
+<footer>
+  <p>Claude Usage Widget is MIT licensed and not affiliated with Anthropic. Claude and Claude Code are trademarks of Anthropic.</p>
+  <p><a href="https://github.com/F3S0J/claude-usage-widget">Source on GitHub</a> · <a href="https://github.com/F3S0J/claude-usage-widget/issues">Report a problem</a> · <a href="https://www.joseftot.com/blog/claude-usage-widget/">How it was built</a> · by <a href="https://www.joseftot.com">Josef Tot</a></p>
+</footer>
+</div>
+
+<script>
+(function () {
+  var mock = document.getElementById('mock');
+  var btns = document.querySelectorAll('.themes button');
+  btns.forEach(function (b) {
+    b.addEventListener('click', function () {
+      mock.dataset.theme = b.dataset.t;
+      btns.forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+    });
+  });
+  // ?shot=og | ?shot=themes : full-screen layouts used to render og.png and themes.png
+  var shot = new URLSearchParams(location.search).get('shot');
+  if (!shot) return;
+  var s = document.createElement('div'); s.className = 'shot';
+  function copy(theme) { var c = mock.cloneNode(true); c.removeAttribute('id'); c.dataset.theme = theme; return c; }
+  if (shot === 'og') {
+    var t = document.createElement('div'); t.className = 'txt';
+    t.innerHTML = '<h1>Claude Code usage, <em>always on screen</em></h1><p>Session and weekly limits, a daily budget, tokens and cost. A free widget for Windows.</p>';
+    s.appendChild(t);
+    var c = copy('dark'); c.style.transform = 'scale(.92)'; s.appendChild(c);
+  } else {
+    ['dark', 'light', 'midnight', 'terminal'].forEach(function (th) { s.appendChild(copy(th)); });
+  }
+  document.body.appendChild(s);
+})();
+</script>
+</body>
+</html>

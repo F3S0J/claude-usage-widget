@@ -1,4 +1,11 @@
-# claude-usage-widget
+# Claude Usage Widget: Claude Code usage monitor for Windows
+
+[![Website](https://img.shields.io/badge/website-f3s0j.github.io-d97757)](https://f3s0j.github.io/claude-usage-widget/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+![Platform: Windows 10 / 11](https://img.shields.io/badge/platform-Windows%2010%20%2F%2011-0078d4)
+
+**See your Claude Code rate limits, token usage and cost without typing `/usage`.**
+Website with a live preview: **https://f3s0j.github.io/claude-usage-widget/**
 
 A small always-on-top Windows widget that shows your **Claude subscription usage**: the
 5-hour session, the weekly limit, and any per-model weekly limit. These are the same
@@ -11,6 +18,19 @@ Claude Code terminal.
 
 One PowerShell file plus one C# file it compiles at start. No install, no dependencies
 beyond what ships with Windows.
+
+Four themes, adjustable transparency and size (example numbers):
+
+<img src="docs/themes.png" alt="The Claude Usage Widget in its four themes: Dark, Light, Midnight and Terminal" width="820">
+
+## Who it is for
+
+- You use Claude Code on a **Claude Pro or Max** plan and keep hitting the **5-hour
+  session limit** or the **weekly limit** without warning.
+- You want to **use the whole weekly limit** without running out before the reset.
+- You want to know **how many tokens** your agents and subagents burn, and what that
+  would **cost on the API**.
+- You want a usage tracker that is always visible instead of a command you have to run.
 
 ## What it does
 
